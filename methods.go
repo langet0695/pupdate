@@ -110,8 +110,9 @@ func getPuppy(fileName string) string {
 }
 
 func getQuote() quote {
-	url := "https://quoteslate.vercel.app/api/quotes/random"
-	res, getErr := http.Get(url)
+	URL := "https://quoteslate.vercel.app/api/quotes/random"
+
+	res, getErr := http.Get(URL)
 	if getErr != nil {
 		log.Fatal(getErr)
 	}
