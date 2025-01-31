@@ -81,9 +81,8 @@ func sendMail(c *gin.Context) {
 	}
 }
 
-func getPuppy() string {
+func getPuppy(fileName string) string {
 	URL := "https://dog.ceo/api/breeds/image/random"
-	FILE_NAME := "daily_dog.jpg"
 	TARGET_FOLDER := "/tmp"
 
 	res, getErr := http.Get(URL)
@@ -102,7 +101,7 @@ func getPuppy() string {
 		log.Fatal(jsonErr)
 	}
 
-	err, filePath := downloadImages(dog_obj.Address, FILE_NAME, TARGET_FOLDER)
+	err, filePath := downloadImages(dog_obj.Address, fileName, TARGET_FOLDER)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -175,9 +174,10 @@ func fetchSubject() string {
 }
 
 func buildMessage(fromAddress string) *gomail.Message {
+	FILE_NAME := "daily_dog.jpg"
 
 	daily_quote := getQuote()
-	filePath := getPuppy()
+	filePath := getPuppy(FILE_NAME)
 
 	message := gomail.NewMessage()
 
