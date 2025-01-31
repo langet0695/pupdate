@@ -25,8 +25,6 @@ func getSubscribers(c *gin.Context) {
 func getSubscriberByEmail(c *gin.Context) {
 	email := c.Param("email")
 
-	// Loop through the list of subscribers, looking for
-	// an aemaillbum whose ID value matches the parameter.
 	for _, sub := range subscribers {
 		if sub.Email == email {
 			c.IndentedJSON(http.StatusOK, sub)
@@ -43,7 +41,7 @@ func createSubscriber(c *gin.Context) {
 		return
 	}
 
-	// Write logic to confirm subscriber doesn't currently exist if so send error.
+	// TODO Write logic to confirm subscriber doesn't currently exist if so send error.
 
 	subscribers = append(subscribers, newSubscriber)
 	c.IndentedJSON(http.StatusCreated, newSubscriber)
@@ -65,25 +63,12 @@ func deleteSubscriber(c *gin.Context) {
 }
 
 func sendMail(c *gin.Context) {
-	// Create a new message
-	getPuppy()
-	daily_quote := getQuote()
-	fmt.Println("A Quote for Mail", daily_quote)
+
 	MAIL_USER := viperEnvVariable("MAIL_USER")
 	MAIL_PASSWORD := viperEnvVariable("MAIL_PASSWORD")
 
-	message := gomail.NewMessage()
-
-	// Set email headers
-	message.SetHeader("From", MAIL_USER)
+	message := buildMessage(MAIL_USER)
 	message.SetHeader("To", "tlange1124@gmail.com")
-	subject := fetchSubject()
-	message.SetHeader("Subject", subject)
-
-	// Set email body
-	body := fmt.Sprintf(`<p style="font-size: 16px;"><em>%s<br/>   - %s</em></p><img src="cid:daily_dog.jpg" alt="A good looking dog"/>`, daily_quote.Quote, daily_quote.Author)
-	message.Embed("/Users/tlange/pupdate/tmp/daily_dog.jpg")
-	message.SetBody("text/html", body)
 
 	// Set up the SMTP dialer
 	dialer := gomail.NewDialer("smtp.gmail.com", 587, MAIL_USER, MAIL_PASSWORD)
@@ -96,31 +81,36 @@ func sendMail(c *gin.Context) {
 	}
 }
 
-func getPuppy() {
-	// Execute fetch call to https://dog.ceo/api/breeds/image/random Fetch!
-	fmt.Printf("FETCHING A DOGGIE!")
-	url := "https://dog.ceo/api/breeds/image/random"
-	res, getErr := http.Get(url)
+func getPuppy() string {
+	URL := "https://dog.ceo/api/breeds/image/random"
+	FILE_NAME := "daily_dog.jpg"
+	TARGET_FOLDER := "/tmp"
+
+	res, getErr := http.Get(URL)
+
 	if getErr != nil {
 		log.Fatal(getErr)
 	}
 	body, readErr := io.ReadAll(res.Body)
+
 	if readErr != nil {
 		log.Fatal(readErr)
 	}
-	fmt.Println(string(body))
 	dog_obj := dog{}
 	jsonErr := json.Unmarshal(body, &dog_obj)
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
-	fmt.Println("Dog Address", dog_obj.Address, "Response Status", dog_obj.Status)
-	fmt.Println("DOWNLOADING")
-	downloadImages(dog_obj.Address)
+
+	err, filePath := downloadImages(dog_obj.Address, FILE_NAME, TARGET_FOLDER)
+	if err != nil {
+		panic(err.Error())
+	}
+	return filePath
+
 }
 
 func getQuote() quote {
-	fmt.Printf("Feting a Meaningless Platitude")
 	url := "https://quoteslate.vercel.app/api/quotes/random"
 	res, getErr := http.Get(url)
 	if getErr != nil {
@@ -130,36 +120,34 @@ func getQuote() quote {
 	if readErr != nil {
 		log.Fatal(readErr)
 	}
-	fmt.Println(string(body))
 
 	quote_obj := quote{}
 	jsonErr := json.Unmarshal(body, &quote_obj)
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
-	fmt.Println("Quote", quote_obj.Quote)
 
 	return quote_obj
 }
 
-func downloadImages(link string) error {
+func downloadImages(link string, fileName string, targetFolder string) (err error, dogFilePath string) {
+	tmp := getFilePath(targetFolder)
+	dogFilePath = filepath.Join(tmp, fileName)
 
-	tmp := getFilePath("/tmp")
-
-	fmt.Println(tmp)
 	res, err := http.Get(link)
 	if err != nil {
-		return err
+		return
 	}
 	defer res.Body.Close()
 
-	file, err := os.Create(filepath.Join(tmp, "daily_dog.jpg"))
+	file, err := os.Create(dogFilePath)
 	if err != nil {
-		return err
+		return
 	}
 	defer file.Close()
 	file.ReadFrom(res.Body)
-	return nil
+
+	return
 }
 
 func getFilePath(tmpPath string) string {
@@ -184,4 +172,24 @@ func fetchSubject() string {
 
 	subject := fmt.Sprintf(`%s - %s`, subjectBase, currentTime)
 	return subject
+}
+
+func buildMessage(fromAddress string) *gomail.Message {
+
+	daily_quote := getQuote()
+	filePath := getPuppy()
+
+	message := gomail.NewMessage()
+
+	// Set email headers
+	message.SetHeader("From", fromAddress)
+	subject := fetchSubject()
+	message.SetHeader("Subject", subject)
+
+	// Set email body
+	body := fmt.Sprintf(`<p style="font-size: 16px;"><em>%s<br/>   - %s</em></p><img src="cid:daily_dog.jpg" alt="A good looking dog"/>`, daily_quote.Quote, daily_quote.Author)
+	message.Embed(filePath)
+	message.SetBody("text/html", body)
+
+	return message
 }
