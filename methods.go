@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 
@@ -76,15 +77,13 @@ func sendMail(c *gin.Context) {
 	// Set email headers
 	message.SetHeader("From", MAIL_USER)
 	message.SetHeader("To", "tlange1124@gmail.com")
-	message.SetHeader("Subject", "Woof woof New")
+	subject := fetchSubject()
+	message.SetHeader("Subject", subject)
 
 	// Set email body
-	// body := fmt.Sprintf(`<h1>%s</h1><img src="cid:a_dog.jpg" alt="My image"/>`, daily_quote)
-	// message.Embed("/Users/tlange/Downloads/a_dog.jpg")
-	body := fmt.Sprintf(`<h1>%s</h1><img src="cid:daily_dog.jpg" alt="My image"/>`, daily_quote)
+	body := fmt.Sprintf(`<p style="font-size: 16px;"><em>%s<br/>   - %s</em></p><img src="cid:daily_dog.jpg" alt="A good looking dog"/>`, daily_quote.Quote, daily_quote.Author)
 	message.Embed("/Users/tlange/pupdate/tmp/daily_dog.jpg")
 	message.SetBody("text/html", body)
-	// message.SetBody("text/html", `<h1>WOAH</h1><img src="cid:a_dog.jpg" alt="My image"/>`)
 
 	// Set up the SMTP dialer
 	dialer := gomail.NewDialer("smtp.gmail.com", 587, MAIL_USER, MAIL_PASSWORD)
@@ -120,7 +119,7 @@ func getPuppy() {
 	downloadImages(dog_obj.Address)
 }
 
-func getQuote() string {
+func getQuote() quote {
 	fmt.Printf("Feting a Meaningless Platitude")
 	url := "https://quoteslate.vercel.app/api/quotes/random"
 	res, getErr := http.Get(url)
@@ -140,7 +139,7 @@ func getQuote() string {
 	}
 	fmt.Println("Quote", quote_obj.Quote)
 
-	return quote_obj.Quote
+	return quote_obj
 }
 
 func downloadImages(link string) error {
@@ -170,4 +169,19 @@ func getFilePath(tmpPath string) string {
 	}
 	path := fmt.Sprintf("%s%s", curDir, tmpPath)
 	return path
+}
+
+func fetchSubject() string {
+	var subjectBase string
+
+	if rand.IntN(100)%5 < 4 {
+		subjectBase = subjectStandard[rand.IntN(len(subjectStandard))]
+	} else {
+		subjectBase = subjectPuns[rand.IntN(len(subjectPuns))]
+	}
+
+	currentTime := time.Now().Local().Format("2006-01-02")
+
+	subject := fmt.Sprintf(`%s - %s`, subjectBase, currentTime)
+	return subject
 }
