@@ -2,7 +2,7 @@ package main
 
 import "time"
 
-var subscribers = []subscriber{
+var subs = []subscriber{
 	{Email: "tlange1124@gmail.com", DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
 	{Email: "domino.birze@gmail.com", DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
 }

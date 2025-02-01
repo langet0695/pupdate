@@ -4,6 +4,12 @@ import (
 	"time"
 )
 
+type Subscribers []struct {
+	Email            string    `json:"email"`
+	DateSubscribed   time.Time `json:"dateSubscribed"`
+	DateUnsubscribed time.Time `json:"dateUnsubscribed"`
+}
+
 type subscriber struct {
 	Email            string    `json:"email"`
 	DateSubscribed   time.Time `json:"dateSubscribed"`
@@ -21,4 +27,8 @@ type quote struct {
 	Author string   `json:"author"`
 	Length int      `json:"length"`
 	Tags   []string `json:"tags"`
+}
+
+type email struct {
+	Email string `json:email`
 }

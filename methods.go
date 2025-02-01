@@ -14,51 +14,73 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rogpeppe/go-internal/lockedfile"
 
 	gomail "gopkg.in/mail.v2"
 )
 
-func getSubscribers(c *gin.Context) {
+func getActiveSubscribers(c *gin.Context) {
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := getFilePath(SUBSCRIBERS_PATH)
+	subscribers := fetchSubscribers(file_path, true)
 	c.IndentedJSON(http.StatusOK, subscribers)
 }
 
 func getSubscriberByEmail(c *gin.Context) {
+	var subscriberHistory Subscribers
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := getFilePath(SUBSCRIBERS_PATH)
+	subscribers := fetchSubscribers(file_path, false)
+
 	email := c.Param("email")
 
-	for _, sub := range subscribers {
-		if sub.Email == email {
-			c.IndentedJSON(http.StatusOK, sub)
-			return
+	for _, subscriber := range subscribers {
+		if subscriber.Email == email {
+			subscriberHistory = append(subscriberHistory, subscriber)
 		}
+	}
+	if len(subscriberHistory) > 0 {
+		c.IndentedJSON(http.StatusOK, subscriberHistory)
+		return
 	}
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "subscriber not found"})
 }
 
 func createSubscriber(c *gin.Context) {
 	var newSubscriber subscriber
-
-	if err := c.BindJSON(&newSubscriber); err != nil {
+	var email email
+	if err := c.BindJSON(&email); err != nil {
 		return
 	}
+	fmt.Println("EMAIL FROM REQUEST: ", email.Email)
+	newSubscriber.Email = email.Email
+	newSubscriber.DateSubscribed = time.Now()
+	newSubscriber.DateUnsubscribed = time.Time{}
 
-	// TODO Write logic to confirm subscriber doesn't currently exist if so send error.
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := getFilePath(SUBSCRIBERS_PATH)
+	outSubscriber, err := editSubscribers(file_path, newSubscriber, "create")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	subscribers = append(subscribers, newSubscriber)
-	c.IndentedJSON(http.StatusCreated, newSubscriber)
+	c.IndentedJSON(http.StatusCreated, outSubscriber)
 }
 
 func deleteSubscriber(c *gin.Context) {
 	email := c.Param("email")
+	var deleteSubscriber subscriber
+	deleteSubscriber.Email = email
 
-	for i, sub := range subscribers {
-		if sub.Email == email {
-			subscribers[i].DateUnsubscribed = time.Now()
-			c.IndentedJSON(http.StatusOK, sub)
-			c.IndentedJSON(http.StatusOK, subscribers)
-			return
-		}
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := getFilePath(SUBSCRIBERS_PATH)
+	outSubscriber, err := editSubscribers(file_path, deleteSubscriber, "delete")
+	if err != nil {
+		fmt.Println(err)
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "subscriber not found"})
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "subscriber not found"})
+
+	c.IndentedJSON(http.StatusOK, outSubscriber)
 
 }
 
@@ -68,17 +90,29 @@ func sendMail(c *gin.Context) {
 	MAIL_PASSWORD := viperEnvVariable("MAIL_PASSWORD")
 
 	message := buildMessage(MAIL_USER)
-	message.SetHeader("To", "tlange1124@gmail.com")
+	// message.SetHeader("To", "tlange1124@gmail.com")
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := getFilePath(SUBSCRIBERS_PATH)
+	subscribers := fetchSubscribers(file_path, true)
 
 	// Set up the SMTP dialer
 	dialer := gomail.NewDialer("smtp.gmail.com", 587, MAIL_USER, MAIL_PASSWORD)
 	// Send the email
-	if err := dialer.DialAndSend(message); err != nil {
-		fmt.Println("Error:", err)
-		panic(err)
-	} else {
-		fmt.Println("Email sent successfully!")
+	for _, subscriber := range subscribers {
+		message.SetHeader("To", subscriber.Email)
+		if err := dialer.DialAndSend(message); err != nil {
+			fmt.Println("Error:", err)
+			panic(err)
+		} else {
+			fmt.Println("Email sent successfully!")
+		}
 	}
+	// if err := dialer.DialAndSend(message); err != nil {
+	// 	fmt.Println("Error:", err)
+	// 	panic(err)
+	// } else {
+	// 	fmt.Println("Email sent successfully!")
+	// }
 }
 
 func getPuppy(fileName string) string {
@@ -101,7 +135,7 @@ func getPuppy(fileName string) string {
 		log.Fatal(jsonErr)
 	}
 
-	err, filePath := downloadImages(dog_obj.Address, fileName, TARGET_FOLDER)
+	filePath, err := downloadImages(dog_obj.Address, fileName, TARGET_FOLDER)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -130,7 +164,7 @@ func getQuote() quote {
 	return quote_obj
 }
 
-func downloadImages(link string, fileName string, targetFolder string) (err error, dogFilePath string) {
+func downloadImages(link string, fileName string, targetFolder string) (dogFilePath string, err error) {
 	tmp := getFilePath(targetFolder)
 	dogFilePath = filepath.Join(tmp, fileName)
 
@@ -193,4 +227,83 @@ func buildMessage(fromAddress string) *gomail.Message {
 	message.SetBody("text/html", body)
 
 	return message
+}
+
+func fetchSubscribers(path string, active bool) Subscribers {
+
+	jsonFile, err := lockedfile.Open(path)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer jsonFile.Close()
+
+	byteValue, _ := io.ReadAll(jsonFile)
+	fmt.Println("READ LOCK")
+	var subscribers Subscribers
+	var outSubscribers Subscribers
+
+	json.Unmarshal(byteValue, &subscribers)
+	if active {
+		for _, subscriber := range subscribers {
+			if subscriber.DateUnsubscribed.IsZero() {
+				outSubscribers = append(outSubscribers, subscriber)
+			}
+		}
+		return outSubscribers
+	}
+	return subscribers
+}
+
+func editSubscribers(path string, subscriber subscriber, action string) (outSubscriber subscriber, err error) {
+	// Open the file in edit mode which gives us a write lock
+	fmt.Println("OPENING IN EDIT MODE WRITE LOCK")
+	jsonFile, err := lockedfile.Edit(path)
+	if err != nil {
+		return
+	}
+	defer jsonFile.Close()
+	byteValue, _ := io.ReadAll(jsonFile)
+
+	var subscribers Subscribers
+	json.Unmarshal(byteValue, &subscribers)
+
+	// Execute logic to handle create and deletes
+	if action == "delete" {
+		for i := 0; i < len(subscribers); i++ {
+			if subscriber.Email == subscribers[i].Email && subscribers[i].DateUnsubscribed.IsZero() {
+				subscribers[i].DateUnsubscribed = time.Now()
+				outSubscriber = subscribers[i]
+			}
+		}
+	}
+	if action == "create" {
+		var exists bool = false
+		for i := 0; i < len(subscribers); i++ {
+			if subscriber.Email == subscribers[i].Email && subscribers[i].DateUnsubscribed.IsZero() {
+				exists = true
+				outSubscriber = subscribers[i]
+			}
+		}
+		if !exists {
+			subscribers = append(subscribers, subscriber)
+			outSubscriber = subscriber
+		}
+	}
+	// Construct the byte slice to and write it to destination. Make sure to truncate to remove excess
+	out, err := json.Marshal(subscribers)
+	if err != nil {
+		return
+	}
+	bytes, err := jsonFile.WriteAt(out, 0)
+	if err != nil {
+		return
+	}
+	err = jsonFile.Truncate(int64(len(out)))
+	if err != nil {
+		return
+	}
+	fmt.Println("BYTES WRITTEN: ", bytes)
+	return
+
 }
