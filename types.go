@@ -30,5 +30,5 @@ type quote struct {
 }
 
 type email struct {
-	Email string `json:email`
+	Email string `json:"email"`
 }

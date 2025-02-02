@@ -1,11 +1,9 @@
 package main
 
-import "time"
-
-var subs = []subscriber{
-	{Email: "tlange1124@gmail.com", DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
-	{Email: "domino.birze@gmail.com", DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
-}
+// var subs = []subscriber{
+// 	{Email: "tlange1124@gmail.com", DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
+// 	{Email: "domino.birze@gmail.com", DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
+// }
 
 var subjectStandard = []string{
 	"Woof, Woof!",
