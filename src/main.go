@@ -5,6 +5,7 @@ import (
 )
 
 func main() {
+
 	// Make mail loop over opt in users
 	// Make get subscriver email show all instances of subscriber history
 	router := gin.Default()
@@ -16,4 +17,5 @@ func main() {
 	router.POST("/mail", sendMail)
 
 	router.Run("localhost:8080")
+	// router.Run(":8080")
 }
