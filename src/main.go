@@ -16,6 +16,6 @@ func main() {
 	router.GET("/subscribers", getActiveSubscribers)
 	router.POST("/mail", sendMail)
 
-	router.Run("localhost:8080")
-	// router.Run(":8080")
+	// router.Run("localhost:8080")
+	router.Run(":8080")
 }
