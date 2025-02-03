@@ -83,8 +83,8 @@ func deleteSubscriber(c *gin.Context) {
 
 func sendMail(c *gin.Context) {
 
-	MAIL_USER := viperEnvVariable("MAIL_USER")
-	MAIL_PASSWORD := viperEnvVariable("MAIL_PASSWORD")
+	MAIL_USER := viperEnvVariable("MAIL_USER", ".env")
+	MAIL_PASSWORD := viperEnvVariable("MAIL_PASSWORD", ".env")
 
 	message := buildMessage(MAIL_USER)
 	// message.SetHeader("To", "tlange1124@gmail.com")
