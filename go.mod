@@ -1,4 +1,4 @@
-module pupdate
+module github.com/langet/pupdate
 
 go 1.23.5
 

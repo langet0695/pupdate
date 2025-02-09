@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"fmt"
@@ -10,17 +10,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type Todo struct {
-	Text string
-	Done bool
-}
-
-var todos []Todo
-var loggedInUser string
 var secretKey = []byte("your-secret-key")
 
 // Function to create JWT tokens with claims
-func createToken(c *gin.Context) {
+func CreateToken(c *gin.Context) {
 	username := "a-dummy-username"
 	fmt.Println("Generating Token for: ", username)
 	// Create a new JWT token with claims
@@ -44,15 +37,8 @@ func createToken(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, tokenString)
 }
 
-func getRole(username string) string {
-	if username == "senior" {
-		return "senior"
-	}
-	return "employee"
-}
-
 // Function to verify JWT tokens
-func authenticateMiddleware(c *gin.Context) {
+func AuthenticateMiddleware(c *gin.Context) {
 	// Retrieve the token from the cookie
 	// tokenString, err := c.Cookie("token")
 	bearerString := c.GetHeader("Authorization")
@@ -80,25 +66,4 @@ func authenticateMiddleware(c *gin.Context) {
 
 	// Continue with the next middleware or route handler
 	c.Next()
-}
-
-// Function to verify JWT tokens
-func verifyToken(tokenString string) (*jwt.Token, error) {
-	// Parse the token with the secret key
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
-	})
-
-	// Check for verification errors
-	if err != nil {
-		return nil, err
-	}
-
-	// Check if the token is valid
-	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
-	}
-
-	// Return the verified token
-	return token, nil
 }

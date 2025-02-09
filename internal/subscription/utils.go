@@ -1,72 +1,13 @@
-package main
+package subscription
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-
 	"time"
 
 	"github.com/rogpeppe/go-internal/lockedfile"
 )
-
-func downloadImages(link string, fileName string, targetFolder string) (dogFilePath string, err error) {
-	tmp := getFilePath(targetFolder)
-	dogFilePath = filepath.Join(tmp, fileName)
-
-	res, err := http.Get(link)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
-
-	file, err := os.Create(dogFilePath)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-	file.ReadFrom(res.Body)
-
-	return
-}
-
-func getFilePath(tmpPath string) string {
-	curDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-	}
-	path := fmt.Sprintf("%s%s", curDir, tmpPath)
-	return path
-}
-
-func fetchSubscribers(path string, active bool) Subscribers {
-
-	jsonFile, err := lockedfile.Open(path)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	defer jsonFile.Close()
-
-	byteValue, _ := io.ReadAll(jsonFile)
-	fmt.Println("READ LOCK")
-	var subscribers Subscribers
-	var outSubscribers Subscribers
-
-	json.Unmarshal(byteValue, &subscribers)
-	if active {
-		for _, subscriber := range subscribers {
-			if subscriber.DateUnsubscribed.IsZero() {
-				outSubscribers = append(outSubscribers, subscriber)
-			}
-		}
-		return outSubscribers
-	}
-	return subscribers
-}
 
 func editSubscribers(path string, subscriber subscriber, action string) (outSubscriber subscriber, err error) {
 	// Open the file in edit mode which gives us a write lock
