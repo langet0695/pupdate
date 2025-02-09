@@ -8,8 +8,6 @@ TODO:
 - Set up nginx reverse proxy
 - Get multi stage deploy working with envs
 
-- Build a method to send volume to pupdate inbox for storage
-
 - Set up authorization for email reg 
 1. Wrap createsubscriber with jwt auth middle ware and change parameter fetch from url param to a jwt key pair
 2. Create a new route that creates a token and sends it in a formatted url that new subs need to ack
