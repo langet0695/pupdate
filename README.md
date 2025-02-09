@@ -23,3 +23,8 @@ Copy your personal list of subs in json to the subscriptions.json folder
 navigage to the root dir fo this repo ~/<path-to-pupdate>
 build your image with `docker build -t pupdate:<personal_tag> -f Dockerfile .`
 execute `docker run -d -p 8080:8080 -v ~/pupdate/src/startup:/app/tmp pupdate:volrouter`
+
+make sure to set your environment user and password to something that will then be used to generate your jwt
+to get your jwt use a command as follows
+`curl -X "POST" http://admin:aPassword@localhost:8080/createToken`
+// TODO IS make sure this is configured to only work with https
