@@ -19,6 +19,7 @@ func NewRouter() *gin.Engine {
 	// router.GET("/subscribers", auth.AuthenticateMiddleware, subscription.GetActiveSubscribers)
 	router.GET("/subscribers", subscription.GetActiveSubscribers)
 	router.POST("/mail", mail.SendMail)
+	router.POST("saveSubscribers", mail.BackupSubscriptions)
 
 	// router.Run("localhost:8080")
 	router.Run(":8080")
