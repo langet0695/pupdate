@@ -1,0 +1,78 @@
+package subscription
+
+import (
+	"fmt"
+
+	"net/http"
+
+	"time"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/langet/pupdate/internal"
+)
+
+func GetActiveSubscribers(c *gin.Context) {
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
+	subscribers := internal.FetchSubscribers(file_path, true)
+	c.IndentedJSON(http.StatusOK, subscribers)
+}
+
+func GetSubscriberByEmail(c *gin.Context) {
+	var subscriberHistory Subscribers
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
+	subscribers := internal.FetchSubscribers(file_path, false)
+
+	email := c.Param("email")
+
+	for _, subscriber := range subscribers {
+		if subscriber.Email == email {
+			subscriberHistory = append(subscriberHistory, subscriber)
+		}
+	}
+	if len(subscriberHistory) > 0 {
+		c.IndentedJSON(http.StatusOK, subscriberHistory)
+		return
+	}
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "subscriber not found"})
+}
+
+func CreateSubscriber(c *gin.Context) {
+	var newSubscriber subscriber
+	var email email
+	if err := c.BindJSON(&email); err != nil {
+		return
+	}
+	fmt.Println("EMAIL FROM REQUEST: ", email.Email)
+	newSubscriber.Email = email.Email
+	newSubscriber.DateSubscribed = time.Now()
+	newSubscriber.DateUnsubscribed = time.Time{}
+
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
+	outSubscriber, err := editSubscribers(file_path, newSubscriber, "create")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	c.IndentedJSON(http.StatusCreated, outSubscriber)
+}
+
+func DeleteSubscriber(c *gin.Context) {
+	email := c.Param("email")
+	var deleteSubscriber subscriber
+	deleteSubscriber.Email = email
+
+	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
+	outSubscriber, err := editSubscribers(file_path, deleteSubscriber, "delete")
+	if err != nil {
+		fmt.Println(err)
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "subscriber not found"})
+	}
+
+	c.IndentedJSON(http.StatusOK, outSubscriber)
+
+}

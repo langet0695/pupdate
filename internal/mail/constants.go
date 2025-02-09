@@ -1,9 +1,4 @@
-package main
-
-// var subs = []subscriber{
-// 	{Email: "tlange1124@gmail.com", DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
-// 	{Email: "domino.birze@gmail.com", DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
-// }
+package mail
 
 var subjectStandard = []string{
 	"Woof, Woof!",
@@ -39,8 +34,3 @@ var subjectPuns = []string{
 	`I need a cup of Earl Greyhound tea every day.`,
 	`When a problem comes your way, you must Whippet.`,
 }
-
-// var subscriber_map = map[string]subscriber{
-// 	"tlange1124@gmail.com":   {DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
-// 	"domino.birze@gmail.com": {DateSubscribed: time.Now(), DateUnsubscribed: time.Time{}},
-// }
