@@ -1,0 +1,9 @@
+services:
+  pupdate:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ~/pupdate/tmp/:/app/tmp
