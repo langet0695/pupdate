@@ -18,7 +18,7 @@ TO build multistage image use following command
 TO run use
 `docker run -d -p 8080:8080 pupdate:multistage`
 To run with volume 
-`docker run -d -p 8080:8080 -v ~/pupdate_data:/ext_data 00c7792f22a7`
+`docker run -d -p 8080:8080 -v ~/pupdate_data:/ext_data <image>`
 
 # Deploying with an external volume
 Copy your personal list of subs in json to the subscriptions.json folder
