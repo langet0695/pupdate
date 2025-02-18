@@ -13,19 +13,16 @@ import (
 func SendMail(c *gin.Context) {
 
 	MAIL_USER := os.Getenv("MAIL_USER")
+	fmt.Println("MAIL_USER: ", MAIL_USER)
 	MAIL_PASSWORD := os.Getenv("MAIL_PASSWORD")
-	// MAIL_USER := viperEnvVariable("MAIL_USER", ".env")
-	// MAIL_PASSWORD := viperEnvVariable("MAIL_PASSWORD", ".env")
 
 	message := buildMessage(MAIL_USER)
-	// message.SetHeader("To", "tlange1124@gmail.com")
-	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	SUBSCRIBERS_PATH := os.Getenv("SUBSCRIPTIONS_PATH")
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	subscribers := internal.FetchSubscribers(file_path, true)
 
-	// Set up the SMTP dialer
 	dialer := gomail.NewDialer("smtp.gmail.com", 587, MAIL_USER, MAIL_PASSWORD)
-	// Send the email
+
 	for _, subscriber := range subscribers {
 		message.SetHeader("To", subscriber.Email)
 		if err := dialer.DialAndSend(message); err != nil {
@@ -41,12 +38,8 @@ func BackupSubscriptions(c *gin.Context) {
 
 	MAIL_USER := os.Getenv("MAIL_USER")
 	MAIL_PASSWORD := os.Getenv("MAIL_PASSWORD")
-	// MAIL_USER := auth.viperEnvVariable("MAIL_USER", ".env")
-	// MAIL_PASSWORD := viperEnvVariable("MAIL_PASSWORD", ".env")
 
 	message := gomail.NewMessage()
-
-	// Set email headers
 	message.SetHeader("From", MAIL_USER)
 	message.SetHeader("To", MAIL_USER)
 
@@ -54,15 +47,14 @@ func BackupSubscriptions(c *gin.Context) {
 	subject := fmt.Sprintf("Subscribers Save %s", time.Now().Format(timeFormat))
 	message.SetHeader("Subject", subject)
 
-	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	SUBSCRIBERS_PATH := os.Getenv("SUBSCRIPTIONS_PATH")
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
-	// Set email body
 	message.Attach(file_path)
+
 	message.SetBody("text", "Subscriber data incase of recovery")
 
-	// Set up the SMTP dialer
 	dialer := gomail.NewDialer("smtp.gmail.com", 587, MAIL_USER, MAIL_PASSWORD)
-	// Send the email
+
 	if err := dialer.DialAndSend(message); err != nil {
 		fmt.Println("Error:", err)
 		panic(err)
