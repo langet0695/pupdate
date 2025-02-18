@@ -17,7 +17,6 @@ func SendMail(c *gin.Context) {
 	MAIL_PASSWORD := os.Getenv("MAIL_PASSWORD")
 
 	message := buildMessage(MAIL_USER)
-	// SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
 	SUBSCRIBERS_PATH := os.Getenv("SUBSCRIPTIONS_PATH")
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	subscribers := internal.FetchSubscribers(file_path, true)
@@ -48,7 +47,6 @@ func BackupSubscriptions(c *gin.Context) {
 	subject := fmt.Sprintf("Subscribers Save %s", time.Now().Format(timeFormat))
 	message.SetHeader("Subject", subject)
 
-	// SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
 	SUBSCRIBERS_PATH := os.Getenv("SUBSCRIPTIONS_PATH")
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	message.Attach(file_path)

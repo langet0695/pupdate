@@ -65,7 +65,7 @@ func editSubscribers(path string, subscriber subscriber, action string) (outSubs
 
 }
 
-func subscriptionNotificaitons(email string, isSubscribing bool) {
+func subscriptionNotificaitons(email string, action string) {
 
 	MAIL_USER := os.Getenv("MAIL_USER")
 	MAIL_PASSWORD := os.Getenv("MAIL_PASSWORD")
@@ -74,7 +74,7 @@ func subscriptionNotificaitons(email string, isSubscribing bool) {
 	message.SetHeader("From", MAIL_USER)
 	message.SetHeader("To", email)
 
-	if isSubscribing == true {
+	if action == "new_subscription" {
 		message.SetHeader("Subject", "Woof Woof!")
 		body := fmt.Sprintf(`<p>Hello there,
 							<br><br>
@@ -90,12 +90,16 @@ func subscriptionNotificaitons(email string, isSubscribing bool) {
 							<br>
 							<i>To unsubscribe email: <b>pupdate+unsubscribe@gmail.com</b></i>`)
 		message.SetBody("text/html", body)
-	} else {
+	} else if action == "unsubscribing" {
 		message.SetHeader("Subject", "I guess this is goodbye...")
 		timeFormat := "2006-01-02 15:04:05.999999999 -0700 PST"
 		timeStr := time.Now().Format(timeFormat)
 		body := fmt.Sprintf(`<p>As of %s, you have unsubscribed from Pupdate. <br> You must like cats &#128572;</p>`, timeStr)
 		message.SetBody("text/html", body)
+
+	} else if action == "existing_subscription" {
+		message.SetHeader("Heyyyyy, I know you!!")
+		message.SetBody("text", "Silly goose, you've already subscribed!")
 
 	}
 
