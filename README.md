@@ -31,3 +31,16 @@ make sure to set your environment user and password to something that will then 
 to get your jwt use a command as follows
 `curl -X "POST" http://admin:aPassword@localhost:8080/createToken`
 // TODO IS make sure this is configured to only work with https
+
+to build for pi-zero-w use following
+- set image base tag to golang:1.24rc3-alpine3.20
+- specify platform in build `docker build -t pupdate:armv6 --platform linux/arm/v6 --no-cache .`
+- `docker save pupdate:armv6 > ~/Desktop/pi-img-v6.tar `
+- `scp <source> <destination-remote>`
+- `docker load -i pi-img-v6.tar`
+- `docker run -d -p 8080:8080 -v ~/pupdate/tmp:/app/tmp --env-file .env --platform linux/arm/v6 pupdate:armv6`
+
+hosting config
+- set up nginx
+- port forward dynamic dns 
+- configuring for namecheap domain

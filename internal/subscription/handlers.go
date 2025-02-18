@@ -2,6 +2,7 @@ package subscription
 
 import (
 	"fmt"
+	"os"
 
 	"net/http"
 
@@ -13,7 +14,8 @@ import (
 )
 
 func GetActiveSubscribers(c *gin.Context) {
-	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	// SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	SUBSCRIBERS_PATH := os.Getenv("SUBSCRIPTIONS_PATH")
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	subscribers := internal.FetchSubscribers(file_path, true)
 	c.IndentedJSON(http.StatusOK, subscribers)
@@ -21,7 +23,8 @@ func GetActiveSubscribers(c *gin.Context) {
 
 func GetSubscriberByEmail(c *gin.Context) {
 	var subscriberHistory Subscribers
-	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	// SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	SUBSCRIBERS_PATH := os.Getenv("SUBSCRIPTIONS_PATH")
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	subscribers := internal.FetchSubscribers(file_path, false)
 
@@ -50,12 +53,15 @@ func CreateSubscriber(c *gin.Context) {
 	newSubscriber.DateSubscribed = time.Now()
 	newSubscriber.DateUnsubscribed = time.Time{}
 
-	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	// SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	SUBSCRIBERS_PATH := os.Getenv("SUBSCRIPTIONS_PATH")
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	outSubscriber, err := editSubscribers(file_path, newSubscriber, "create")
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	subscriptionNotificaitons(newSubscriber.Email, true)
 
 	c.IndentedJSON(http.StatusCreated, outSubscriber)
 }
@@ -65,13 +71,15 @@ func DeleteSubscriber(c *gin.Context) {
 	var deleteSubscriber subscriber
 	deleteSubscriber.Email = email
 
-	SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	// SUBSCRIBERS_PATH := "/tmp/subscriptions.json"
+	SUBSCRIBERS_PATH := os.Getenv("SUBSCRIPTIONS_PATH")
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	outSubscriber, err := editSubscribers(file_path, deleteSubscriber, "delete")
 	if err != nil {
 		fmt.Println(err)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "subscriber not found"})
 	}
+	subscriptionNotificaitons(deleteSubscriber.Email, false)
 
 	c.IndentedJSON(http.StatusOK, outSubscriber)
 
