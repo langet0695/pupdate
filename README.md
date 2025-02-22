@@ -1,10 +1,10 @@
-# Pupdate
+# Pupdate :dog:
 
 *There is only one corner of the universe you can be certain of improving, and that's your own self.*
 
 *- Aldous Huxley*
 
-![Dog Image](./tmp/daily_dog.jpg)
+<img src="./tmp/daily_dog.jpg" width="25%" height="25%">
 
 ## Overview
 
@@ -21,6 +21,13 @@ The application is powered by a small Dockerized GO service run through a that s
 Scheduled operations (e.g. backups and pupdates) are orchestrated through Cron jobs that run shell scripts inside of the host running the app.
 
 User triggered activites, e.g. subscription and unsubscription, are handled through emails sent to a centralized GMail inbox. This inbox leverages filters and Apps Scripts trigger user management activites.
+
+## TODO's / Future Improvements
+- Get multi stage deploy working with .env file
+- Improve error response handling on by adding messges to return to the user based on error type
+- Add automated unit testing
+- Find a way to enable automated triggers from inbound emails. Will allow immediate response to user activites
+- Build customization interface so that users can define parameters that customize their pupdate experience
 
 ## Deployment
 
@@ -65,51 +72,22 @@ Depending on the system one deploys to some modifications may be necessary. This
     - NOTE: Again for the Pi Zero-W I used a modified command that I ran on the remote host: `docker run -d -p 8080:8080 -v ~/pupdate/tmp:/app/tmp --env-file .env --platform linux/arm/v6 pupdate:armv6`
 
 ### Configure Cron Jobs
-1. 
+1. Modify the `./setup/CronScripts/pupdate-save.sh` and `./setup/CronScripts/pupdate-trigger.sh` scripts to use your api-password.
+2. In your console run `crontab -e` to edit the cron file that you can use to schedule your scripts. In it create two cron routines to trigger the scripts daily. Below are the schedules I used:
+    - 45 15 * * * `<path-to-script>`/pupdate-trigger.sh
+    - 45 16 * * * `<path-to-script>`/pupdate-save.sh
+3. Save the cron file and your routines will now run on a schedule!
 
-### Set up nginx server
+### Set up a reverse proxy
+The last step is to set up a reverse proxy to route requests from you domain to your local host. I used a nginx server, but there are other great options available. I won't describe this in detail here as there is a lot of documentation on how to do this already on the web. If you haven't done this before then I recommend checking out the [nginx docs](https://nginx.org/en/docs/beginners_guide.html).
 
-## Testing
+The only note I have here is that it's 2025. Configure ssl for your reverse proxy and only configure connections through port 443.
 
-## TODO's
-- Describe Objective of repo and why the project exists. Aka update readme
-- Explain available http commands in a table
-- Outline design decisions around data handling
-- Explain how to deploy
-- Add app script code to repo
-- Add shell scripts
-- Copy app script snippet and explain how to add / configure gmail
-- Get multi stage deploy working with envs
 
-#DOCKER
-TO build multistage image use following command
-`docker build -t pupdate:multistage -f Dockerfile.multistage .`
-TO run use
-`docker run -d -p 8080:8080 pupdate:multistage`
-To run with volume 
-`docker run -d -p 8080:8080 -v ~/pupdate_data:/ext_data <image>`
+### Completion
 
-# Deploying with an external volume
-Copy your personal list of subs in json to the subscriptions.json folder
-navigage to the root dir fo this repo ~/<path-to-pupdate>
-build your image with `docker build -t pupdate:<personal_tag> -f Dockerfile .`
-execute `docker run -d -p 8080:8080 -v ~/pupdate/<path_to_data>:/app/tmp pupdate:<personal_tag>`
-<!-- execute `docker run -d -p 8080:8080 -v ~/pupdate/src/startup:/app/tmp pupdate:volrouter` -->
+Once the above is configured you've deployed pupdate! 
 
-make sure to set your environment user and password to something that will then be used to generate your jwt
-to get your jwt use a command as follows
-`curl -X "POST" http://admin:aPassword@localhost:8080/createToken`
-// TODO IS make sure this is configured to only work with https
+Feel free to re-configure and alter the code to build a custome experience for your users. 
 
-to build for pi-zero-w use following
-- set image base tag to golang:1.24rc3-alpine3.20
-- specify platform in build `docker build -t pupdate:armv6 --platform linux/arm/v6 --no-cache .`
-- `docker save pupdate:armv6 > ~/Desktop/pi-img-v6.tar `
-- `scp <source> <destination-remote>`
-- `docker load -i pi-img-v6.tar`
-- `docker run -d -p 8080:8080 -v ~/pupdate/tmp:/app/tmp --env-file .env --platform linux/arm/v6 pupdate:armv6`
-
-hosting config
-- set up nginx
-- port forward dynamic dns 
-- configuring for namecheap domain
+Good luck and happy trails :paw_prints:
