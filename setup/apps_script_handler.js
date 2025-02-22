@@ -53,13 +53,11 @@ function Gmail_Trigger(){
                 'Authorization': 'Bearer ' + JWT
               }
           };
-  
-          // console.log(options)
-          // console.log("Don't forget to re-enable fetch and the label handlers")
+
           var response = UrlFetchApp.fetch(url, options);
           console.log("RESP: %s", response.getResponseCode());
         }
-        // } 
+
         else if (recipients[j] == UNSUBSCRIBE) {
           console.log("Unsubscribe: %s", sender)
           var url = "https://" + DOMAIN + "/subscriber/" + sender
