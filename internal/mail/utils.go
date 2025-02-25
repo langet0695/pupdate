@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"math/rand/v2"
 	"net/http"
 	"os"
@@ -41,21 +42,23 @@ func getPuppy(fileName string) string {
 	res, getErr := http.Get(URL)
 
 	if getErr != nil {
-		log.Fatal(getErr)
+		slog.Error(getErr.Error())
+		panic(getErr.Error())
 	}
 	body, readErr := io.ReadAll(res.Body)
-
 	if readErr != nil {
-		log.Fatal(readErr)
+		slog.Error(readErr.Error())
+		panic(readErr.Error())
 	}
 	dog_obj := dog{}
 	jsonErr := json.Unmarshal(body, &dog_obj)
 	if jsonErr != nil {
-		log.Fatal(jsonErr)
+		slog.Error(jsonErr.Error())
+		panic(jsonErr.Error())
 	}
-
 	filePath, err := downloadImages(dog_obj.Address, fileName, TARGET_FOLDER)
 	if err != nil {
+		slog.Error(err.Error())
 		panic(err.Error())
 	}
 	return filePath

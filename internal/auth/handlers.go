@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -16,7 +16,7 @@ var secretKey = []byte(os.Getenv("JWT_SECRET"))
 // Function to create JWT tokens with claims
 func CreateToken(c *gin.Context) {
 	username := "a-dummy-username"
-	fmt.Println("Generating Token for: ", username)
+	slog.Info("Generating Token for: ", "username", username)
 	// Create a new JWT token with claims
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": username,
@@ -31,28 +31,23 @@ func CreateToken(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, err)
 	}
 
-	// Print information about the created token
-	fmt.Printf("Token claims added: %+v\n", claims)
-
 	c.IndentedJSON(http.StatusCreated, tokenString)
 }
 
 // Function to verify JWT tokens
 func AuthenticateMiddleware(c *gin.Context) {
-	// Retrieve the token from the cookie
-	// tokenString, err := c.Cookie("token")
 	bearerString := c.GetHeader("Authorization")
 	tokenString := strings.SplitAfter(bearerString, " ")[1]
 
 	// Verify the token
 	token, err := verifyToken(tokenString)
 	if err != nil {
-		fmt.Printf("Token verification failed: %v\\n", err)
-		c.Redirect(http.StatusSeeOther, "/login")
+		slog.Error(err.Error())
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid token"})
 		c.Abort()
 		return
 	}
-	fmt.Printf("Token verified successfully. Claims: %+v\\n", token.Claims)
+	slog.Info("Token verified: ", "Claims", token)
 
 	c.Next()
 }

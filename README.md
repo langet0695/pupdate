@@ -91,3 +91,12 @@ Once the above is configured you've deployed pupdate!
 Feel free to re-configure and alter the code to build a custome experience for your users. 
 
 Good luck and happy trails :paw_prints:
+
+
+## Development
+For local development use the following steps:
+1. Clone the repo locally
+2. Comment out `gin.SetMode(gin.ReleaseMode)` from `./internal/routes/routes.go`
+3. Run one of the following depending on your preference:
+    - nodemon -e go --signal SIGTERM --exec 'go' run ./cmd/pupdate
+    - docker compose up --watch

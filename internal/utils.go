@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 
 	"github.com/rogpeppe/go-internal/lockedfile"
@@ -28,7 +29,7 @@ func FetchSubscribers(path string, active bool) Subscribers {
 	defer jsonFile.Close()
 
 	byteValue, _ := io.ReadAll(jsonFile)
-	fmt.Println("READ LOCK")
+	slog.Info("Acquired READ Lock")
 	var subscribers Subscribers
 	var outSubscribers Subscribers
 

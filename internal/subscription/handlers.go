@@ -1,7 +1,7 @@
 package subscription
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 
 	"net/http"
@@ -44,9 +44,10 @@ func CreateSubscriber(c *gin.Context) {
 	var newSubscriber subscriber
 	var email email
 	if err := c.BindJSON(&email); err != nil {
-		return
+		slog.Error(err.Error())
+		c.IndentedJSON(http.StatusBadRequest, err)
 	}
-	fmt.Println("EMAIL FROM REQUEST: ", email.Email)
+	slog.Info("EMAIL FROM REQUEST: ", "Email", email)
 	newSubscriber.Email = email.Email
 	newSubscriber.DateSubscribed = time.Now()
 	newSubscriber.DateUnsubscribed = time.Time{}
@@ -55,7 +56,8 @@ func CreateSubscriber(c *gin.Context) {
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	outSubscriber, err := editSubscribers(file_path, newSubscriber, "create")
 	if err != nil {
-		fmt.Println(err)
+		slog.Error(err.Error())
+		c.IndentedJSON(http.StatusBadRequest, err)
 	}
 
 	if outSubscriber.DateSubscribed == outSubscriber.DateUnsubscribed {
@@ -76,7 +78,7 @@ func DeleteSubscriber(c *gin.Context) {
 	file_path := internal.GetFilePath(SUBSCRIBERS_PATH)
 	outSubscriber, err := editSubscribers(file_path, deleteSubscriber, "delete")
 	if err != nil {
-		fmt.Println(err)
+		slog.Error(err.Error())
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "subscriber not found"})
 	}
 	subscriptionNotificaitons(deleteSubscriber.Email, "unsubscribing")

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 
 func editSubscribers(path string, subscriber subscriber, action string) (outSubscriber subscriber, err error) {
 	// Open the file in edit mode which gives us a write lock
-	fmt.Println("OPENING IN EDIT MODE WRITE LOCK")
+	slog.Info("Acquired WRITE Lock")
 	jsonFile, err := lockedfile.Edit(path)
 	if err != nil {
 		return
@@ -106,9 +107,10 @@ func subscriptionNotificaitons(email string, action string) {
 	dialer := gomail.NewDialer("smtp.gmail.com", 587, MAIL_USER, MAIL_PASSWORD)
 
 	if err := dialer.DialAndSend(message); err != nil {
-		fmt.Println("Error:", err)
+		slog.Error(err.Error())
+		slog.Error("Failed to send subscription notification:", "err", err)
 		panic(err)
 	} else {
-		fmt.Println("Email sent successfully!")
+		slog.Info("Email sent successfully!")
 	}
 }
