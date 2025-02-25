@@ -2,6 +2,7 @@ package mail
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 func SendMail(c *gin.Context) {
 
 	MAIL_USER := os.Getenv("MAIL_USER")
-	fmt.Println("MAIL_USER: ", MAIL_USER)
+	slog.Info("From Address:", "MAIL_USER", MAIL_USER)
 	MAIL_PASSWORD := os.Getenv("MAIL_PASSWORD")
 
 	message := buildMessage(MAIL_USER)
@@ -26,10 +27,10 @@ func SendMail(c *gin.Context) {
 	for _, subscriber := range subscribers {
 		message.SetHeader("To", subscriber.Email)
 		if err := dialer.DialAndSend(message); err != nil {
-			fmt.Println("Error:", err)
+			slog.Error(err.Error())
 			panic(err)
 		} else {
-			fmt.Println("Email sent successfully!")
+			slog.Info("Email sent successfully!")
 		}
 	}
 }
@@ -56,9 +57,9 @@ func BackupSubscriptions(c *gin.Context) {
 	dialer := gomail.NewDialer("smtp.gmail.com", 587, MAIL_USER, MAIL_PASSWORD)
 
 	if err := dialer.DialAndSend(message); err != nil {
-		fmt.Println("Error:", err)
+		slog.Error(err.Error())
 		panic(err)
 	} else {
-		fmt.Println("Email sent successfully!")
+		slog.Info("Email sent successfully!")
 	}
 }
