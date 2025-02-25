@@ -24,9 +24,8 @@ User triggered activites, e.g. subscription and unsubscription, are handled thro
 
 ## TODO's / Future Improvements
 - Get multi stage deploy working with .env file
-- Improve error response handling on by adding messges to return to the user based on error type
 - Add automated unit testing
-- Find a way to enable automated triggers from inbound emails. Will allow immediate response to user activites
+- Implement pub/sub to enable [push notifications](https://developers.google.com/gmail/api/guides/push)
 - Build customization interface so that users can define parameters that customize their pupdate experience
 
 ## Deployment
